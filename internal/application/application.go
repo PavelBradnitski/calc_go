@@ -54,17 +54,18 @@ func (a *Application) Run() error {
 			log.Println("aplication was successfully closed")
 			return nil
 		}
-		// приводим выражение из string в []string, отделяя числа, скобки, знаки друг от друга
-		expressionInSlice, err := calculation.ParseExpression(text)
-		if err != nil {
+		// Проверяем правильность введенного выражения и приводим выражение
+		// из string в []string, отделяя числа, скобки, знаки друг от друга
+		if expressionInSlice, err := calculation.ParseExpression(text); err != nil {
 			log.Println(text, " parsing expression failed wit error: ", err)
-		}
-		//вычисляем выражение
-		result, err := calculation.Calculator(expressionInSlice)
-		if err != nil {
-			log.Println(text, " calculation failed wit error: ", err)
 		} else {
-			log.Println(text, "=", result)
+			//вычисляем выражение
+			result, err := calculation.Calculator(expressionInSlice)
+			if err != nil {
+				log.Println(text, " calculation failed wit error: ", err)
+			} else {
+				log.Println(text, "=", result)
+			}
 		}
 	}
 }
