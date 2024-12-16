@@ -8,18 +8,6 @@ import (
 	"testing"
 )
 
-func Test_helloServer(t *testing.T) {
-	jsonExpression := "{\"expression\": \"2+2*2/0.00000\"}"
-	request, _ := http.NewRequest(http.MethodPost, "", bytes.NewBuffer([]byte(jsonExpression)))
-	response := httptest.NewRecorder()
-	CalcHandler(response, request)
-	got := response.Body.String()
-	want := "hello Foo"
-	if got != want {
-		t.Errorf("got %s,want %s", got, want)
-	}
-}
-
 func TestCalcHandler(t *testing.T) {
 	tests := []struct {
 		name             string

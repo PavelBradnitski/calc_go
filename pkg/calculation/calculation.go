@@ -8,8 +8,10 @@ func ParseExpression(input string) ([]string, error) {
 	var values []string
 	currentNumber := ""
 	var err error
+	operations := map[rune]bool{'*': true, '/': true, '+': true, '-': true}
+	symbols := map[rune]bool{'*': true, '/': true, '+': true, '-': true, '(': true, ')': true, '.': true, ' ': true}
 	for i, char := range input {
-		if char != '(' && char != ')' && char != '+' && char != '*' && char != '-' && char != '/' && char != '.' && char != ' ' {
+		if _, ok := symbols[char]; !ok {
 			if char < '0' && char > '9' {
 				return nil, ErrInvidCharachter
 			}
@@ -34,6 +36,13 @@ func ParseExpression(input string) ([]string, error) {
 					return nil, ErrArithmeticSign
 				}
 			}
+			// проверка на 2 арифметических знака подряд
+			if len(values) != 0 {
+				_, ok1 := operations[char]
+				if _, ok2 := operations[[]rune(values[len(values)-1])[0]]; ok1 && ok2 {
+					return nil, ErrInvalidExpression
+				}
+			}
 			if char != ' ' {
 				values = append(values, string(char))
 			}
@@ -41,6 +50,7 @@ func ParseExpression(input string) ([]string, error) {
 		if len(values) != 0 {
 			_, err = strconv.Atoi(values[len(values)-1])
 		}
+
 		if len(values) != 0 && currentNumber != "" && err == nil {
 			return nil, ErrInvalidExpression
 		}
@@ -62,7 +72,7 @@ func Calculator(str []string) (float64, error) {
 		} else {
 			switch v {
 			case "+":
-				for len(stack) != 0 && (stack[len(stack)-1] == '+' || stack[len(stack)-1] == '-' || stack[len(stack)-1] == '*') {
+				for len(stack) != 0 && (stack[len(stack)-1] == '+' || stack[len(stack)-1] == '-' || stack[len(stack)-1] == '*' || stack[len(stack)-1] == '/') {
 					postfix = append(postfix, string(stack[len(stack)-1]))
 					stack = stack[:len(stack)-1]
 				}
@@ -80,7 +90,7 @@ func Calculator(str []string) (float64, error) {
 				}
 				stack = append(stack, '/')
 			case "-":
-				for len(stack) != 0 && (stack[len(stack)-1] == '+' || stack[len(stack)-1] == '-' || stack[len(stack)-1] == '*') {
+				for len(stack) != 0 && (stack[len(stack)-1] == '+' || stack[len(stack)-1] == '-' || stack[len(stack)-1] == '*' || stack[len(stack)-1] == '/') {
 					postfix = append(postfix, string(stack[len(stack)-1]))
 					stack = stack[:len(stack)-1]
 				}
@@ -110,6 +120,9 @@ func Calculator(str []string) (float64, error) {
 func CalculatePrefix(inpStr []string) (float64, error) {
 	var stack []float64
 	var s, f float64
+	if len(inpStr) == 0 {
+		return 0, ErrPostfixExpression
+	}
 	for _, char := range inpStr {
 		if num, err := strconv.ParseFloat(string(char), 64); err == nil {
 			stack = append(stack, num)
