@@ -78,24 +78,27 @@ func CalcHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "{\n\terror: \"%s\"\n}", calculation.ErrInternalServer)
 		return
 	}
 	expressionInSlice, err := calculation.ParseExpression(request.Expression)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "parsing expression failed wit error: %s", err.Error())
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		fmt.Fprintf(w, "{\n\terror: \"%s\"\n}", calculation.ErrInvalidExpression)
+		return
 	}
 	result, err := calculation.Calculator(expressionInSlice)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "err: %s", err.Error())
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		fmt.Fprintf(w, "{\n\terror: \"%s\"\n}", calculation.ErrInvalidExpression)
+		return
 	} else {
-		fmt.Fprintf(w, "result: %f", result)
+		fmt.Fprintf(w, "{\n\tresult: \"%f\"\n}", result)
 	}
 }
 
 func (a *Application) RunServer() error {
-	http.HandleFunc("/", CalcHandler)
+	http.HandleFunc("/api/v1/calculate", CalcHandler)
 	return http.ListenAndServe(":"+a.config.Addr, nil)
 }

@@ -4,22 +4,6 @@ import (
 	"strconv"
 )
 
-//	func main() {
-//		in := bufio.NewReader(os.Stdin)
-//		out := bufio.NewWriter(os.Stdout)
-//		defer out.Flush()
-//		input, _ := in.ReadString('\n')
-//		input = strings.TrimSpace(input)
-//		values, err := ParseExpression(input)
-//		if err != nil {
-//			fmt.Fprintln(out, err)
-//		}
-//		if output, err := Calculator(values); err == nil {
-//			fmt.Fprintln(out, output)
-//		} else {
-//			fmt.Fprintln(out, err)
-//		}
-//	}
 func ParseExpression(input string) ([]string, error) {
 	var values []string
 	currentNumber := ""
