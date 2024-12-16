@@ -20,7 +20,7 @@
 1) curl --request POST --header "Content-Type: application/json" --data "{ \"expression\": \"2+2*2\" }" http://localhost:8080/api/v1/calculate
 Возвращает
 {
-    "result": "результат выражения"
+    "result": "6.000000"
 }
 Код 200.
 2) curl --request POST --header "Content-Type: application/json" --data "{ \"expression\": \"a\" }" http://localhost:8080/api/v1/calculate
