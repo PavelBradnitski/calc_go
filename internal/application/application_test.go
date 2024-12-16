@@ -45,16 +45,37 @@ func TestCalcHandler(t *testing.T) {
 			wantError:        false,
 		},
 		{
+			name:             "negative number in the beginning",
+			expression:       "-5+2",
+			wantedStatusCode: http.StatusOK,
+			wantedResult:     3,
+			wantError:        true,
+		},
+		{
+			name:             "negative number after bracket",
+			expression:       "4+(-5+2)",
+			wantedStatusCode: http.StatusOK,
+			wantedResult:     1,
+			wantError:        true,
+		},
+		{
 			name:             "division by zero",
 			expression:       "2/0",
-			wantedStatusCode: http.StatusBadRequest,
+			wantedStatusCode: http.StatusUnprocessableEntity,
 			wantedResult:     0,
 			wantError:        true,
 		},
 		{
 			name:             "invalid charachter",
 			expression:       "a",
-			wantedStatusCode: http.StatusBadRequest,
+			wantedStatusCode: http.StatusUnprocessableEntity,
+			wantedResult:     0,
+			wantError:        true,
+		},
+		{
+			name:             "invalid expression",
+			expression:       "2++2",
+			wantedStatusCode: http.StatusUnprocessableEntity,
 			wantedResult:     0,
 			wantError:        true,
 		},
@@ -66,7 +87,7 @@ func TestCalcHandler(t *testing.T) {
 			response := httptest.NewRecorder()
 			CalcHandler(response, request)
 			got := response.Body.String()
-			expected := fmt.Sprintf("result: %f", tt.wantedResult)
+			expected := fmt.Sprintf("{\n\tresult: \"%f\"\n}", tt.wantedResult)
 			if !tt.wantError {
 				if got != expected {
 					t.Errorf("got %s,want %s", got, expected)
