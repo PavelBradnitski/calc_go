@@ -12,9 +12,9 @@
 }
 
 Чтобы запустить программу, необходимо:
-1) Запустить команду git clone git@github.com:PavelBradnitski/calc_go.git
+1) Выполнить команду git clone git@github.com:PavelBradnitski/calc_go.git
 2) Перейти в созданную папку calc_go
-3) Ввести команду go run ./cmd/main.go
+3) Выполнить команду go run ./cmd/main.go
 
 Примеры работы программы:
 1) curl --request POST --header "Content-Type: application/json" --data "{ \"expression\": \"2+2*2\" }" http://localhost:8080/api/v1/calculate
