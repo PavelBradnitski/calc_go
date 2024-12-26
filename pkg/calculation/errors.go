@@ -10,4 +10,5 @@ var (
 	ErrBracket           = errors.New("bracket error")
 	ErrArithmeticSign    = errors.New("incorrect use arithmetic sign")
 	ErrPostfixExpression = errors.New("invalid postfix expression")
+	ErrMethod            = errors.New("Method not allowed")
 )
