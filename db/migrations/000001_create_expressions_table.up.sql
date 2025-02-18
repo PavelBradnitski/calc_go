@@ -1,0 +1,5 @@
+CREATE TABLE expressions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    Status VARCHAR(20) NOT NULL,
+    Result FLOAT NOT NULL,
+);

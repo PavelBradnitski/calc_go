@@ -1,15 +1,15 @@
 package application
 
 import (
-	"bufio"
-	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
-	"strings"
 
-	"github.com/PavelBradnitski/calc_go/pkg/calculation"
+	"github.com/PavelBradnitski/calc_go/http/server/handler"
+	"github.com/PavelBradnitski/calc_go/internal/repositories"
+	"github.com/PavelBradnitski/calc_go/internal/services"
+	"github.com/gin-gonic/gin"
+	"github.com/golang-migrate/migrate"
 )
 
 type Config struct {
@@ -35,76 +35,75 @@ func New() *Application {
 	}
 }
 
-// Функция запуска приложения
-// тут будем читать введенную строку и после нажатия ENTER писать результат работы программы на экране
-// если пользователь ввел exit - то останаваливаем приложение
-func (a *Application) Run() error {
-	for {
-		// читаем выражение для вычисления из командной строки
-		log.Println("input expression")
-		reader := bufio.NewReader(os.Stdin)
-		text, err := reader.ReadString('\n')
-		if err != nil {
-			log.Println("failed to read expression from console")
-		}
-		// убираем пробелы, чтобы оставить только вычислемое выражение
-		text = strings.TrimSpace(text)
-		// выходим, если ввели команду "exit"
-		if text == "exit" {
-			log.Println("aplication was successfully closed")
-			return nil
-		}
-		// Проверяем правильность введенного выражения и приводим выражение
-		// из string в []string, отделяя числа, скобки, знаки друг от друга
-		if expressionInSlice, err := calculation.ParseExpression(text); err != nil {
-			log.Println(text, " parsing expression failed wit error: ", err)
-		} else {
-			//вычисляем выражение
-			result, err := calculation.Calculator(expressionInSlice)
-			if err != nil {
-				log.Println(text, " calculation failed wit error: ", err)
-			} else {
-				log.Println(text, "=", result)
-			}
-		}
-	}
-}
-
 type Request struct {
 	Expression string `json:"expression"`
 }
 
-func CalcHandler(w http.ResponseWriter, r *http.Request) {
-	request := new(Request)
-	defer r.Body.Close()
-	err := json.NewDecoder(r.Body).Decode(&request)
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		fmt.Fprintf(w, "{\n\terror: \"%s\"\n}", calculation.ErrMethod)
-		return
-	}
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "{\n\terror: \"%s\"\n}", calculation.ErrInternalServer)
-		return
-	}
-	expressionInSlice, err := calculation.ParseExpression(request.Expression)
-	if err != nil {
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		fmt.Fprintf(w, "{\n\terror: \"%s\"\n}", calculation.ErrInvalidExpression)
-		return
-	}
-	result, err := calculation.Calculator(expressionInSlice)
-	if err != nil {
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		fmt.Fprintf(w, "{\n\terror: \"%s\"\n}", calculation.ErrInvalidExpression)
-		return
-	} else {
-		fmt.Fprintf(w, "{\n\tresult: \"%f\"\n}", result)
-	}
-}
+// func CalcHandler(w http.ResponseWriter, r *http.Request) {
+// 	request := new(Request)
+// 	defer r.Body.Close()
+// 	err := json.NewDecoder(r.Body).Decode(&request)
+// 	if r.Method != http.MethodPost {
+// 		w.WriteHeader(http.StatusMethodNotAllowed)
+// 		fmt.Fprintf(w, "{\n\terror: \"%s\"\n}", calculation.ErrMethod)
+// 		return
+// 	}
+// 	if err != nil {
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		fmt.Fprintf(w, "{\n\terror: \"%s\"\n}", calculation.ErrInternalServer)
+// 		return
+// 	}
+// 	expressionInSlice, err := calculation.ParseExpression(request.Expression)
+// 	if err != nil {
+// 		w.WriteHeader(http.StatusUnprocessableEntity)
+// 		fmt.Fprintf(w, "{\n\terror: \"%s\"\n}", calculation.ErrInvalidExpression)
+// 		return
+// 	}
+// 	id, err := calculation.Calculator(expressionInSlice)
+// 	if err != nil {
+// 		w.WriteHeader(http.StatusUnprocessableEntity)
+// 		fmt.Fprintf(w, "{\n\terror: \"%s\"\n}", calculation.ErrInvalidExpression)
+// 		return
+// 	} else {
+// 		w.WriteHeader(http.StatusCreated)
+// 		fmt.Fprintf(w, "{\n\tid: \"%d\"\n}", id)
+// 	}
+// }
 
-func (a *Application) RunServer() error {
-	http.HandleFunc("/api/v1/calculate", CalcHandler)
-	return http.ListenAndServe(":"+a.config.Addr, nil)
+func (a *Application) RunServer() {
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+	// Подключение к БД
+	db, err := repositories.ConnectToDB(dbUser, dbPassword, dbHost, dbPort, dbName)
+	if err != nil {
+		log.Fatalf("Failed to connect to db: %v", err)
+	}
+	defer db.Close()
+
+	// Запуск миграции
+	connectionString := fmt.Sprintf("mysql://%s:%s@tcp(%s:%s)/%s", dbUser, dbPassword, dbHost, dbPort, dbName)
+	m, err := migrate.New(
+		"file:///Rates/db/migrations",
+		connectionString,
+	)
+	if err != nil {
+		log.Fatalf("Failed to initialize migrations: %v", err)
+	}
+	defer m.Close()
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	log.Println("Migrations applied successfully!")
+	rateRepo := repositories.NewRateRepository(db)
+
+	// Создание HTTP сервера
+	rateService := services.NewRateService(rateRepo)
+	rateHandler := handler.NewRateHandler(rateService)
+	router := gin.Default()
+	rateHandler.RegisterRoutes(router)
+	go router.Run(":8080")
 }
