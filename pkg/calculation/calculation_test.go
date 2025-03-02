@@ -51,17 +51,20 @@ func TestCalculator(t *testing.T) {
 				}
 			}
 			val, err := Calculator(input)
+			if err != nil && testCase.wantError {
+				t.Fatalf("not expected error")
+			}
+			result, err := CalculatePrefix(*val)
 			if testCase.wantError {
 				if err == nil {
 					t.Fatalf("expected an error")
 				}
-
 			} else {
 				if err != nil {
 					t.Fatalf("successful case %s returns error", testCase.expression)
 				}
-				if val != testCase.expectedResult {
-					t.Fatalf("%f should be equal %f", val, testCase.expectedResult)
+				if result != testCase.expectedResult {
+					t.Fatalf("%f should be equal %f", result, testCase.expectedResult)
 				}
 			}
 		})

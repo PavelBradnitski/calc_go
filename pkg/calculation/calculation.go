@@ -60,11 +60,11 @@ func ParseExpression(input string) ([]string, error) {
 	}
 	return values, nil
 }
-func Calculator(str []string) (float64, error) {
+func Calculator(str []string) (*[]string, error) {
 	var postfix []string
 	var stack []rune
 	if !RightBracketSeq(str) {
-		return 0, ErrBracket
+		return nil, ErrBracket
 	}
 	for _, v := range str {
 		if _, err := strconv.ParseFloat(string(v), 64); err == nil {
@@ -106,7 +106,7 @@ func Calculator(str []string) (float64, error) {
 					stack = stack[:len(stack)-1]
 				}
 			default:
-				return 0, ErrInvidCharachter
+				return nil, ErrInvidCharachter
 			}
 		}
 	}
@@ -114,7 +114,7 @@ func Calculator(str []string) (float64, error) {
 		postfix = append(postfix, string(stack[len(stack)-1]))
 		stack = stack[:len(stack)-1]
 	}
-	return CalculatePrefix(postfix)
+	return &postfix, nil
 }
 
 func CalculatePrefix(inpStr []string) (float64, error) {
