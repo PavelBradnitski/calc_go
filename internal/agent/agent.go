@@ -10,9 +10,14 @@ import (
 	"time"
 
 	"github.com/PavelBradnitski/calc_go/internal/orchestrator"
+	"github.com/joho/godotenv"
 )
 
 func AgentRun() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Printf("Failed to open .env")
+	}
 	computingPower, _ := strconv.Atoi(os.Getenv("COMPUTING_POWER"))
 	if computingPower == 0 {
 		computingPower = 2
@@ -29,7 +34,6 @@ func AgentRun() {
 			for {
 				resp, err := http.Get("http://localhost:8090/internal/task")
 				if err != nil {
-					log.Println("Ошибка получения задачи:", err)
 					time.Sleep(5 * time.Second)
 					continue
 				}
@@ -60,7 +64,7 @@ func AgentRun() {
 
 				log.Println("Отправляем результат:", string(jsonData))
 
-				respPost, err := http.Post("http://localhost:8090/internal/result", "application/json", strings.NewReader(string(jsonData)))
+				respPost, err := http.Post("http://localhost:8090/internal/task", "application/json", strings.NewReader(string(jsonData)))
 				if err != nil {
 					log.Println("Ошибка отправки результата:", err)
 					continue
@@ -78,25 +82,18 @@ func AgentRun() {
 func computeOperation(task orchestrator.Task) float64 {
 	switch task.Operation {
 	case "+":
-		time.Sleep(time.Duration(GetExecTime("TIME_ADDITION_MS")) * time.Microsecond)
+		time.Sleep(time.Duration(orchestrator.GetExecTime("TIME_ADDITION_MS")) * time.Millisecond)
 		return task.Arg1 + task.Arg2
 	case "-":
-		time.Sleep(time.Duration(GetExecTime("TIME_SUBTRACTION_MS")) * time.Microsecond)
+		time.Sleep(time.Duration(orchestrator.GetExecTime("TIME_SUBTRACTION_MS")) * time.Millisecond)
 		return task.Arg1 - task.Arg2
 	case "*":
-		time.Sleep(time.Duration(GetExecTime("TIME_MULTIPLICATIONS_MS")) * time.Microsecond)
+		time.Sleep(time.Duration(orchestrator.GetExecTime("TIME_MULTIPLICATIONS_MS")) * time.Millisecond)
 		return task.Arg1 * task.Arg2
 	case "/":
-		time.Sleep(time.Duration(GetExecTime("TIME_DIVISIONS_MS")) * time.Microsecond)
+		time.Sleep(time.Duration(orchestrator.GetExecTime("TIME_DIVISIONS_MS")) * time.Millisecond)
 		return task.Arg1 / task.Arg2
 	default:
 		return 0
 	}
-}
-func GetExecTime(env string) int {
-	val, err := strconv.Atoi(os.Getenv(env))
-	if err != nil {
-		return 2
-	}
-	return val
 }
