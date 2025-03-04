@@ -118,7 +118,6 @@ func (o *Orchestrator) AddExpression(w http.ResponseWriter, r *http.Request) {
 	go func(exprID int, rpn *[]string, orchestrator *Orchestrator) {
 		orchestrator.ParseExpressionToTasks(exprID, *rpn)
 	}(id, postfix, o)
-
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]int{"id": id})
 }
@@ -144,7 +143,13 @@ func (o *Orchestrator) ParseExpressionToTasks(exprID int, postfixExpr []string) 
 		stack = stack[:len(stack)-2]
 
 		execTime := getExecTimeForOp(token)
-
+		if token == "/" && arg2 == 0 {
+			log.Println("Ошибка: деление на 0 запрещено")
+			o.RWMutex.Lock()
+			o.Expressions[exprID] = Expression{ID: exprID, Status: "Error: Division by zero is unacceptable"}
+			o.RWMutex.Unlock()
+			return
+		}
 		task := Task{
 			ExpressionID: exprID,
 			ID:           exprID*100 + taskID,
@@ -258,7 +263,7 @@ func (o *Orchestrator) ProcessResults() {
 		o.RWMutex.RLock()
 		o.Results[result.ExpressionID] = result.Result
 		o.Expressions[result.ExpressionID].SubResults[result.TaskID] = result.Result
-		o.Expressions[result.ExpressionID] = Expression{ID: result.ExpressionID, Status: "completed", Result: result.Result, SubResults: o.Expressions[result.ExpressionID].SubResults}
+		o.Expressions[result.ExpressionID] = Expression{ID: result.ExpressionID, Status: "computing", Result: result.Result, SubResults: o.Expressions[result.ExpressionID].SubResults}
 		o.RWMutex.RUnlock()
 	}
 }
