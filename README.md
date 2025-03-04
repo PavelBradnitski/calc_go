@@ -12,15 +12,10 @@
 ## Проект использует оркестратор для управления развертыванием и масштабированием компонентов.
 # Установка и запуск
 
- - Сервер. на вход арифметическое выражение в виде JSON. Пример:
-{
-    "expression": "выражение, которое ввёл пользователь"
-}
-
 ### Чтобы запустить программу, необходимо:
-### - Выполнить команду git clone git@github.com:PavelBradnitski/calc_go.git
-### - Перейти в 2 терминалах в созданную папку calc_go
-### - Выполнить команды go run ./internal/orchestrator/cmd/main.go и go run ./internal/agent/cmd/main.go в 2 терминалах
+- Выполнить команду git clone git@github.com:PavelBradnitski/calc_go.git
+- Перейти в 2 терминалах в созданную папку calc_go
+- Выполнить команды go run ./internal/orchestrator/cmd/main.go и go run ./internal/agent/cmd/main.go в 2 терминалах
 
 ## Примеры работы программы:
  1) curl --location --request POST 'http://localhost:8080/api/v1/calculate' \
