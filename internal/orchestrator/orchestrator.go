@@ -224,7 +224,7 @@ func (o *Orchestrator) HandleTask(w http.ResponseWriter, r *http.Request) {
 
 // GetTask отдает агенту следующую задачу, удаляя её из списка
 func (o *Orchestrator) GetTask(w http.ResponseWriter, r *http.Request) {
-	o.RWMutex.Lock() // 🔒 Блокируем на запись, чтобы избежать гонки данных
+	o.RWMutex.Lock()
 	defer o.RWMutex.Unlock()
 
 	if len(o.Tasks) == 0 {
@@ -233,7 +233,7 @@ func (o *Orchestrator) GetTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	task := o.Tasks[0]
-	o.Tasks = o.Tasks[1:] // Удаляем задачу из очереди
+	o.Tasks = o.Tasks[1:]
 
 	json.NewEncoder(w).Encode(map[string]Task{"task": task})
 }
