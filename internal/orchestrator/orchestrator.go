@@ -60,6 +60,7 @@ func StartOrchestrator() {
 
 	http.HandleFunc("/api/v1/calculate", orchestrator.AddExpression)
 	http.HandleFunc("/api/v1/expressions", orchestrator.GetExpressions)
+	http.HandleFunc("/api/v1/expressions/", orchestrator.GetExpressionsById)
 	http.HandleFunc("/internal/task", orchestrator.HandleTask)
 	err := godotenv.Load()
 	fmt.Printf("Server is running on :%v\n", os.Getenv("PORT"))
@@ -216,6 +217,29 @@ func (o *Orchestrator) GetExpressions(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"expressions": expressions})
 }
 
+func (o *Orchestrator) GetExpressionsById(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil {
+		http.Error(w, "{\"Error\": \"id is not a number\"}", http.StatusNotFound)
+		return
+	}
+	var expression Expression
+	var found bool
+	o.RWMutex.RLock()
+	for _, expr := range o.Expressions {
+		if expr.ID == id {
+			expression = expr
+			found = true
+			break
+		}
+	}
+	o.RWMutex.RUnlock()
+	if !found {
+		http.Error(w, "{\"Error\": \"not found by id\"}", http.StatusNotFound)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]interface{}{"expressions": expression})
+}
 func (o *Orchestrator) HandleTask(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		o.GetTask(w, r)
