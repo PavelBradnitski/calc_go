@@ -26,6 +26,7 @@
 }'
 ```
 Код ответа 201.
+
 2) Запрос с некорректным выражением:
 ```
 curl --location --request POST 'http://localhost:8080/api/v1/calculate' \
@@ -41,6 +42,7 @@ curl --location --request POST 'http://localhost:8080/api/v1/calculate' \
 } 
 ```
 Код ответа 422.
+
 3) Получение списка всех выражений: 
 ```
  curl --location --request GET 'http://localhost:8090/api/v1/expressions' \
@@ -52,6 +54,7 @@ curl --location --request POST 'http://localhost:8080/api/v1/calculate' \
 {"expressions":{"id":0,"status":"done","result":6}}
 ```
 Код ответа 200.
+
 4) Получение выражения по id: 
 ```
  curl --location --request GET 'http://localhost:8090/api/v1/expressions/?id=0' \
