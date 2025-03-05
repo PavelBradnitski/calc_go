@@ -61,13 +61,12 @@ func StartOrchestrator() {
 	http.HandleFunc("/api/v1/calculate", orchestrator.AddExpression)
 	http.HandleFunc("/api/v1/expressions", orchestrator.GetExpressions)
 	http.HandleFunc("/internal/task", orchestrator.HandleTask)
-
-	fmt.Println("Server is running on :8090")
+	err := godotenv.Load()
+	fmt.Printf("Server is running on :%v\n", os.Getenv("PORT"))
 	fmt.Println("Registered routes:")
 	fmt.Println("- POST /api/v1/calculate")
 	fmt.Println("- GET/POST /internal/task")
 
-	err := godotenv.Load()
 	if err != nil {
 		log.Printf("Failed to open .env")
 	}
