@@ -2,6 +2,7 @@ package agent
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -15,9 +16,16 @@ import (
 
 func AgentRun() {
 	err := godotenv.Load()
+
 	if err != nil {
 		log.Printf("Failed to open .env")
 	}
+	port, err := strconv.Atoi(os.Getenv("PORT"))
+	if err != nil {
+		log.Printf("Port is not a number")
+		port = 8090
+	}
+	path := fmt.Sprintf("http://localhost:%v/internal/task", port)
 	computingPower, _ := strconv.Atoi(os.Getenv("COMPUTING_POWER"))
 	if computingPower == 0 {
 		computingPower = 2
@@ -32,7 +40,8 @@ func AgentRun() {
 			}()
 
 			for {
-				resp, err := http.Get("http://localhost:8090/internal/task")
+
+				resp, err := http.Get(path)
 				if err != nil {
 					time.Sleep(5 * time.Second)
 					continue
