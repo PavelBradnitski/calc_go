@@ -11,20 +11,10 @@ import (
 	"time"
 
 	"github.com/PavelBradnitski/calc_go/internal/orchestrator"
-	"github.com/joho/godotenv"
 )
 
 func AgentRun() {
-	err := godotenv.Load()
-
-	if err != nil {
-		log.Printf("Failed to open .env")
-	}
-	port, err := strconv.Atoi(os.Getenv("PORT"))
-	if err != nil {
-		log.Printf("Port is not a number")
-		port = 8090
-	}
+	port := 8090
 	path := fmt.Sprintf("http://localhost:%v/internal/task", port)
 	computingPower, _ := strconv.Atoi(os.Getenv("COMPUTING_POWER"))
 	if computingPower == 0 {
@@ -48,7 +38,7 @@ func AgentRun() {
 				}
 
 				if resp.StatusCode != http.StatusOK {
-					time.Sleep(1 * time.Second) // Не спамим сервер
+					time.Sleep(100 * time.Millisecond) //venom
 					resp.Body.Close()
 					continue
 				}
